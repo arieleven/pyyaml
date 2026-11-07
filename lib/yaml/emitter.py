@@ -926,6 +926,7 @@ class Emitter:
     def write_double_quoted(self, text, split=True):
         self.write_indicator('"', True)
         start = end = 0
+        escaped_space = -1
         while end <= len(text):
             ch = None
             if end < len(text):
@@ -957,7 +958,8 @@ class Emitter:
                     self.stream.write(data)
                     start = end+1
             if 0 < end < len(text)-1 and (ch == ' ' or start >= end)    \
-                    and self.column+(end-start) > self.best_width and split:
+                    and self.column+(end-start) > self.best_width and split \
+                    and end != escaped_space:
                 data = text[start:end]+'\\'
                 if start < end:
                     start = end
@@ -969,6 +971,8 @@ class Emitter:
                 self.whitespace = False
                 self.indention = False
                 if text[start] == ' ':
+                    # Breaking again before this space would turn the `\` into `\\`.
+                    escaped_space = start
                     data = '\\'
                     self.column += len(data)
                     if self.encoding:
